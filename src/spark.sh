@@ -49,6 +49,8 @@ function filterImages {
     source config/bash/env.sh
     ## get the needed hostnames
     aws_hosts=($(cat ${PEGASUS_HOME}/tmp/crystal-project-spark-cluster/public_dns))
+    ## get the postgresql hostname
+    postgresql_dns=($(cat ${PEGASUS_HOME}/tmp/crystal-project-database-cluster/public_dns))
     ## copy the pyspark python script
     scp src/image_filter.py ubuntu@${aws_hosts[0]}:
     ## launch the command
@@ -60,6 +62,6 @@ function filterImages {
         hostname=\$(hostname)
         hostname=\${hostname##ip-}
         hostname=\${hostname//-/.}
-        spark-submit --jars \$HADOOP_HOME/share/hadoop/tools/lib/{hadoop-aws-2.7.6,aws-java-sdk-1.7.4}.jar --master spark://\$hostname:7077 image_filter.py $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION
+        spark-submit --packages org.apache.hadoop:hadoop-aws:2.7.1,org.postgresql:postgresql:42.1.4 --master spark://\$hostname:7077 image_filter.py $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION ${postgresql_dns[0]}
         "
 }

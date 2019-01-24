@@ -23,15 +23,15 @@ fi
 ## setup HDFS
 ## create hadoop cluster
 source src/hdfs.sh
-launch_hadoop()
+launch_hadoop
 ## download marcos files and trasnfer them to S3
-getMarcosFiles()
+getMarcosFiles
 ## add S3 files to HDFS
-addMarcosToHDFS()
+addMarcosToHDFS
     
 ## setup spark
 source src/spark.sh
 ## install spark
-launchSpark()
+launchSpark
 ## install pyspark
-installPySpark()
+installPySpark
