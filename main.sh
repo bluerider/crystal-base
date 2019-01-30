@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#################### THIS IS WHERE THE CODE RUNS #############################
 ## setup ssh-agent if needed
 if ! [ $SSH_AGENT_PID ]; then
     if ! [ $SSH_AUTH_SOCK ]; then
@@ -42,6 +43,7 @@ function main {
     ## classify images and write results to database
     classifyImages
 }
+############ AFTER THIS IS LIBRARY FUNCTIONS AND SWITCHES #####################
 
 function setupPegasus {
     if [ ! -d tools ]; then
@@ -91,6 +93,13 @@ case $1 in
     --run)
         main
         ;;
+    --config)
+        setupPegasus
+        setupConfig
+        launchHadoop
+        launchSpark
+        launchDatabase
+        ;;
     --setup-config)
         setupConfig
         ;;
@@ -106,7 +115,7 @@ case $1 in
     --setup-postgres)
         launchDatabase
         ;;
-    --classify)
+    --classify-images|--run-pipeline)
         classifyImages
         ;;
     --duplicate-images)
@@ -115,16 +124,19 @@ case $1 in
     --help|*)
         cat <<EOF
         
+Unknown option : $1
 Usage : main.sh [option]
 
     --run                   Setup and run the crystal-base pipeline
+    --config                Setup the crystal-base pipeline
     --setup-config          Setup the bash environment variables
     --setup-pegasus         Setup and install pegasus
     --setup-hadoop          Setup hadoop clusters
     --setup-spark           Setup spark clusters
     --setup-database        Setup database clusters
-    --classify              Classify images from S3
+    --classify-images       Classify images from S3
     --duplicate-images      Duplicate images from S3 and save back to bucket
+    --run-pipeline          Run the crystal-base pipeline
     --help                  Print this help function
     
 EOF
