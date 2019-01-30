@@ -1,3 +1,5 @@
+import os, sys
+from pyspark import SparkContext, SparkConf, SQLContext
 from sparkdl import readImages, DeepImageFeaturizer
 from pyspark.sql.functions import lit
 from pyspark.ml import Pipeline
@@ -6,12 +8,15 @@ from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 
 ## main insertion function
 def main(sc):
-    train_df, test_df = genDataFrames("s3a://marcos/data/")
+    ## we need to pass in the AWS keys
+    sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
+    sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
+    train_df, test_df = genDataFrames("s3a://marcos-data/")
     p = transferLearner(20, 0.05, 0.3)
     p_model = runModel(train_df, p)
     predictions_df = predictWithModel(test_df, p_model)
     accuracy = validate(predictions_df)
-    print("Model was accurate to: "+accuracy)
+    print("Model was accurate to: "+str(accuracy))
     writeToPostgreSQL(predictions_df)
 
 ## let's work on getting this classifier up
@@ -60,7 +65,7 @@ def transferLearner(max_iter, reg_param, elastic_net_param):
 
 ## run the model
 ## return a model
-def runModel(train_df, pipeline)
+def runModel(train_df, pipeline):
     ## run the model
     p_model = pipeline.fit(train_df)
     
