@@ -34,11 +34,6 @@ def getImages(sc, addr):
     #crystal_imgs = sc.textFile(addr+"/marcos-data/*/*/*.jpeg)
     return(crystal_imgs)
 
-## function to accept an iterator
-def genImgsToS3Partition(partition):
-    for row in partition:
-        genImagesToS3(row)
-
 ## generate variations of an image
 def genImagesToS3(row, aws_info):
     urls, imgs = transformImages(row)
