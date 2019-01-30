@@ -1,31 +1,26 @@
-#!/bin/bash
-
 ## launch database instances
-function launchPostgreSQL {
-    source config/bash/env.sh
+function launchDatabase {
     ## requires the use of peg
     for a in config/database-cluster/*yml; do
         peg up "$a"
     done
+    
     ## get the cluster information
     peg fetch crystal-project-database-cluster
     
-    ## install some suff on hdfs-cluster
+    ## install needed pegasus dependencies
     for a in ssh aws environment; do
-        peg install crystal-project-database-cluster "$a"
+        peg install crystal-project-database-cluster $a
     done
     
-    ## fetch the cluster information
-    peg fetch crystal-project-database-cluster
-    
     ## get the needed hostnames
-    aws_hosts=($(cat ${PEGASUS_HOME}/tmp/crystal-project-database-cluster/public_dns))
+    database_hosts=($(cat ${PEGASUS_HOME}/tmp/crystal-project-database-cluster/public_dns))
     
     ## copy the needed files
-    scp config/database-cluster/*.conf ubuntu@${aws_hosts[0]}:
+    scp config/database-cluster/*.conf ubuntu@${database_hosts[0]}:
     
     ## install postgresql
-    ssh ubuntu@${aws_hosts[0]} '
+    ssh ubuntu@${database_hosts[0]} '
         sudo apt-get install postgresql{,-contrib}
         for file in pg_hba.conf postresql.conf; do
             sudo chown postgres:postgres "$file"
@@ -43,11 +38,11 @@ function launchPostgreSQL {
             );q
         EOSQL
     '
-
-    ## error checking
+    
+    ## error handling
     if [ $? == 0 ]; then
-        echo "Launched hadoop hdfs cluster!"
+        echo "Launched databases!"
     else
-        echo "Error in launching hadoop cluster"
+        echo "Error in launching database cluster"
     fi
 }
