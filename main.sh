@@ -6,7 +6,11 @@ if ! [ $SSH_AGENT_PID ]; then
         eval $(ssh-agent -s)
     fi
 else
-    echo "requires the use of ssh"
+    echo 'Need to launch ssh-agent with eval $(ssh-agent -s)'
+fi
+
+if [ ! -d tools ]; then
+    mkdir tools
 fi
 
 ## get needed tools
