@@ -34,7 +34,9 @@ fi
 source config/bash/env.sh
 
 ## source all bash source files
-source src/bash/*.sh
+for fun in src/bash/*.sh; do
+    source "$fun"
+done;
 
 ## setup the hadoop cluster
 launchHadoop
