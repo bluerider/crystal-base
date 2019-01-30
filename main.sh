@@ -118,7 +118,7 @@ case $1 in
     --classify-images|--run-pipeline)
         classifyImages
         ;;
-    --duplicate-images)
+    --multiply-images)
         multiplyImages
         ;;
     --help|*)
@@ -135,7 +135,7 @@ Usage : main.sh [option]
     --setup-spark           Setup spark clusters
     --setup-database        Setup database clusters
     --classify-images       Classify images from S3
-    --duplicate-images      Duplicate images from S3 and save back to bucket
+    --multiply-images       Transform and multiply images from S3 and save back to bucket
     --run-pipeline          Run the crystal-base pipeline
     --help                  Print this help function
     
