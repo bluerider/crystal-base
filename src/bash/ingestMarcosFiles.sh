@@ -6,6 +6,7 @@ function ingestMarcosFiles {
     
     ## let's temporarily use ssh command instead of pegasus
     hadoop_master=$(cat ${PEGASUS_HOME}/tmp/crystal-project-spark-cluster/public_dns | head -1)
+    echo "Ingesting files using an ec2 instance..."
     ## we should do this remotely
     ssh ubuntu@$hadoop_master "
         ## got to install awscli since it is not included

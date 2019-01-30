@@ -5,8 +5,10 @@ function multiplyImages {
     ## get the needed hostnames
     spark_hosts=($(cat ${PEGASUS_HOME}/tmp/crystal-project-spark-cluster/public_dns))
     ## copy the pyspark python script
+    echo "Copy python script to spark master..."
     scp src/python/multiplyImages.py ubuntu@${spark_hosts[0]}:
     ## launch the command
+    echo "Running spark image generator job..."
     ssh ubuntu@${spark_hosts[0]} "
         export PYSPARK_PYTHON=python3
         export LD_LIBRARY_PATH+=:/usr/local/hadoop/lib/native

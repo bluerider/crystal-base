@@ -6,8 +6,10 @@ function classifyImages {
     spark_hosts=($(cat ${PEGASUS_HOME}/tmp/crystal-project-spark-cluster/public_dns))
     postgresql_hosts=($(cat ${PEGASUS_HOME}/tmp/crystal-project-database-cluster/public_dns))
     ## copy the pyspark python script
+    echo "Copying python script to spark master..."
     scp src/python/classifyImages.py ubuntu@${spark_hosts[0]}:
     ## launch the command
+    echo "Running spark classification job..."
     ssh ubuntu@${spark_hosts[0]} "
         export PYSPARK_PYTHON=python3
         export LD_LIBRARY_PATH+=:/usr/local/hadoop/lib/native
