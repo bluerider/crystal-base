@@ -6,7 +6,8 @@ if ! [ $SSH_AGENT_PID ]; then
         eval $(ssh-agent -s)
     fi
 else
-    echo 'Need to launch ssh-agent with eval $(ssh-agent -s)'
+    echo "ssh-agent not found, launching ssh-agent..."
+    eval $(ssh-agent -s)
 fi
 
 if [ ! -d tools ]; then
