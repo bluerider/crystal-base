@@ -18,13 +18,11 @@ def main(sc):
     addr = "s3a:/"
     ## let's get the rdd for images
     crystal_imgs = getImages(sc, addr)
-    aws_access_key = copy(os.environ["AWS_ACCESS_KEY_ID"])
-    aws_secret_key = copy()
     ## create a broadcast variable containing AWS keys
     aws_info = sc.broadcast((os.environ["AWS_ACCESS_KEY_ID"], 
                              os.environ["AWS_SECRET_ACCESS_KEY"]))
     ## let's generate some images and upload them to S3
-    crystal_imgs.foreach(genImagesToS3)
+    crystal_imgs.foreach(lambda row: genImagesToS3(row, aws_info))
 
 ## get the RDDs from images
 ## we have to switch to an RDD instead
@@ -42,7 +40,7 @@ def genImgsToS3Partition(partition):
         genImagesToS3(row)
 
 ## generate variations of an image
-def genImagesToS3(row):
+def genImagesToS3(row, aws_info):
     urls, imgs = transformImages(row)
     aws_access_key, aws_secret_key = aws_info.value
     s3 = s3fs.S3FileSystem(key = aws_access_key,
