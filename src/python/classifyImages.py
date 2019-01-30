@@ -11,12 +11,18 @@ def main(sc):
     ## we need to pass in the AWS keys
     sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
     sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
+    ## get the training and testing dataframes
     train_df, test_df = genDataFrames("s3a://marcos-data/")
+    ## setup the transfer learner
     p = transferLearner(20, 0.05, 0.3)
+    ## run the model
     p_model = runModel(train_df, p)
+    ## get the predictions data frame
     predictions_df = predictWithModel(test_df, p_model)
+    ## get the accuracy of the predictions
     accuracy = validate(predictions_df)
     print("Model was accurate to: "+str(accuracy))
+    ## write the results to database
     writeToPostgreSQL(predictions_df)
 
 ## let's work on getting this classifier up
