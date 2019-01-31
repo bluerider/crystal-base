@@ -27,7 +27,7 @@ function launchDatabase {
     echo "Setting up and launching postgreSQL..."
     ssh ubuntu@${database_hosts[0]} '
         sudo apt-get install postgresql{,-contrib}
-        for file in pg_hba.conf postresql.conf; do
+        for file in pg_hba.conf postgresql.conf; do
             sudo chown postgres:postgres "$file"
             sudo chmod o-rw "$file"
             sudo chmod g-w "$file"
@@ -35,12 +35,12 @@ function launchDatabase {
         done
         sudo service postgresql start
         sudo -u postgres createdb crystal-base
-        sudo -u postgres psql << EOSQL
+        sudo -u postgres psql <<EOSQL
         \connect crystal-base
         CREATE TABLE  marcos (
-            ID         integer,
+            ID         text,
             crystal    bool
-            );q
+            );
         EOSQL
     '
     

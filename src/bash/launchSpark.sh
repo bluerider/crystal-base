@@ -20,7 +20,7 @@ function launchSpark {
     for host in ${spark_hosts[@]}; do
         ssh ubuntu@$host '
             sudo apt-get install python3-pip -y
-            sudo pip3 install pyspark numpy nose pillow keras h5py py4j boto3 tensorflow s3fs sparkdl pandas
+            sudo pip3 install pyspark numpy nose pillow keras h5py py4j boto3 tensorflow s3fs sparkdl pandas dill sparkflow
             done
         '
     done

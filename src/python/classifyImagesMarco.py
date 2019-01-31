@@ -1,6 +1,5 @@
 import os, sys
 from pyspark import SparkContext, SparkConf, SQLContext
-from sparkdl import DeepImageFeaturizer
 from pyspark.ml.image import ImageSchema
 from pyspark.sql.functions import lit
 from pyspark.ml import Pipeline
@@ -56,8 +55,13 @@ def genDataFrames(url):
     ## return the dataframes
     return(train_df, test_df)
 
-## let's setup the trainer
-## returns a pipeline
+## let's use the marco trainer
+def marcoTf(path):
+    sess =  tf.Session(graph=tf.Graph())
+    tf.saved_model.loader.load(sess, ["serve"], path)
+    graph = tf.get_default_graph()
+    
+    
 def transferLearner(max_iter, reg_param, elastic_net_param):
     ## let's setup some parameters
     featurizer = DeepImageFeaturizer(inputCol="image", outputCol="features", modelName="InceptionV3")

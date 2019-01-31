@@ -112,11 +112,21 @@ case $1 in
     --setup-spark)
         launchSpark
         ;;
-    --setup-postgres)
+    --setup-database)
         launchDatabase
         ;;
     --classify-images|--run-pipeline)
-        classifyImages
+        case $2 in
+            marco)
+            classifyImagesMarco
+            ;;
+            Inceptionv3)
+            classifyImages
+            ;;
+            simple|*)
+            classifyImagesSimple
+            ;;
+        esac
         ;;
     --multiply-images)
         multiplyImages
@@ -127,17 +137,17 @@ case $1 in
 Unknown option : $1
 Usage : main.sh [option]
 
-    --run                   Setup and run the crystal-base pipeline
-    --config                Setup the crystal-base pipeline
-    --setup-config          Setup the bash environment variables
-    --setup-pegasus         Setup and install pegasus
-    --setup-hadoop          Setup hadoop clusters
-    --setup-spark           Setup spark clusters
-    --setup-database        Setup database clusters
-    --classify-images       Classify images from S3
-    --multiply-images       Transform and multiply images from S3 and save back to bucket
-    --run-pipeline          Run the crystal-base pipeline
-    --help                  Print this help function
+    --run                    Setup and run the crystal-base pipeline
+    --config                 Setup the crystal-base pipeline
+    --setup-config           Setup the bash environment variables
+    --setup-pegasus          Setup and install pegasus
+    --setup-hadoop           Setup hadoop clusters
+    --setup-spark            Setup spark clusters
+    --setup-database         Setup database clusters
+    --classify-images <arg>  Classify images from S3; args : marco, Inceptionv3, simple
+    --multiply-images        Transform and multiply images from S3 and save back to bucket
+    --run-pipeline           Run the crystal-base pipeline
+    --help                   Print this help function
     
 EOF
 esac
