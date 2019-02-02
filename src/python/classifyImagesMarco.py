@@ -1,122 +1,63 @@
-import os, sys
-from pyspark import SparkContext, SparkConf, SQLContext
+## got to pass in the aws keys by arguments
+import sys, os
+from pyspark import SparkContext, SparkConf, SparkFiles
 from pyspark.ml.image import ImageSchema
-from pyspark.sql.functions import lit
-from pyspark.ml import Pipeline
-from pyspark.ml.classification import LogisticRegression
-from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+from pyspark.sql.types import StringType, StructField, StructType, BooleanType
+from pyspark.sql import *
+import tensorflow as tf
+from numpy import argmax
 
 ## main insertion function
 def main(sc):
     ## we need to pass in the AWS keys
     sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
     sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
-    ## get the training and testing dataframes
-    train_df, test_df = genDataFrames("s3a://marcos-data/")
-    ## setup the transfer learner
-    p = transferLearner(20, 0.05, 0.3)
-    ## run the model
-    p_model = runModel(train_df, p)
-    ## get the predictions data frame
-    predictions_df = predictWithModel(test_df, p_model)
-    ## get the accuracy of the predictions
-    accuracy = validate(predictions_df)
-    print("Model was accurate to: "+str(accuracy))
-    ## write the results to database
-    writeToPostgreSQL(predictions_df)
+    # use S3 streaming
+    addr = "s3a:/"
+    ## get the crystal images
+    crystal_imgs = getImages(sc, addr)
+    ##  set the schema
+    schema = StructType([StructField('id', StringType(), False),
+                         StructField('crystal', BooleanType(), False)])
+    ## set the DAG
+    crystal_mapped = crystal_imgs.mapPartitions(classifyImagesPartition)
+    ##  return results as a dataframe
+    df = spark_session.createDataFrame(crystal_mapped, schema)
+    ## we have too many partitions
+    df.rdd.coalesce(100)
 
-## let's work on getting this classifier up
-## returns a training and test dataframe
-def genDataFrames(url):
-    ## training set
-    ## let's get and combine the negative image data set
-    clear_train_imgs = ImageSchema.readImages(url+"train-jpg/Clear/*.jpeg").withColumn("label", lit(0))
-    precipitate_train_imgs = ImageSchema.readImages(url+"train-jpg/Precipitate/*.jpeg").withColumn("label", lit(0))
-    other_train_imgs = ImageSchema.readImages(url+"train-jpg/Other/*.jpeg").withColumn("label", lit(0))
-    negative_train_imgs = clear_train_imgs.unionAll(precipitate_train_imgs).unionAll(other_train_imgs)
-
-    ## let's get crystal data set
-    positive_train_imgs = ImageSchema.readImages(url+"train-jpg/Crystals/*.jpeg").withColumn("label", lit(1))
-
-    ## testing set
-    ## let's get and combine the negative image data set
-    clear_test_imgs = ImageSchema.readImages(url+"test-jpg/Clear/*.jpeg").withColumn("label", lit(0))
-    precipitate_test_imgs = ImageSchema.readImages(url+"test-jpg/Precipitate/*.jpeg").withColumn("label", lit(0))
-    other_test_imgs = ImageSchema.readImages(url+"test-jpg/Other/*.jpeg").withColumn("label", lit(0))
-    negative_test_imgs = clear_test_imgs.unionAll(precipitate_test_imgs).unionAll(other_test_imgs)
-
-    ## let's get crystal data set
-    positive_test_imgs = ImageSchema.readImages(url+"test-jpg/Crystals/*.jpeg").withColumn("label", lit(1))
-
-    ## let's combine them to create the training df
-    train_df = positive_train_imgs.unionAll(negative_train_imgs)
-    test_df = positive_test_imgs.unionAll(negative_test_imgs)
+## get the RDDs for images as <url, bytestring>
+def getImages(sc, addr):
+    ## get an rdd for the binaryfiles from the crystal_imgs
+    ## use to reduce the number of transfers of uncompressed
+    ## imgs
+    crystal_imgs = sc.binaryFiles(addr+"/marcos-data.bak/test-jpg/Clear/*.jpeg")
+    return(crystal_imgs)
+        
+## classify partitions of images to reduce writes
+def classifyImagesPartition(partition):
+    model = ZipFile('savedmodel.zip', 'r')\
+        .extractall("")
+    predictor = tf.contrib.predictor.from_saved_model('savedmodel')
+    ## grab the byte arrays for the imgs
+    ## use zip since we are passed a list of
+    ## tuples : <url, bytestring>
+    urls, imgs = zip(*partition)
+    ## create a dictionary entry for the imgs for
+    ## tensorflow model
+    dictionary = {"image_bytes" : imgs}
+    ## classify images as a batch
+    prediction = predictor(dictionary)
+    ## get the predicted state of each image
+    ## index of crystal value is 1
+    ## check if we're also above 50% sure we have a crystal
+    bools = [1 == argmax(array) and argmax(array) > 0.5 for array in prediction["scores"]]
+    ## we want to return the values as key value tuples
+    ## <s3_url, crystal boolean>
+    values = [(url, bool(crystal_bool)) for url, crystal_bool in zip(urls, bools)]
     
-    ## return the dataframes
-    return(train_df, test_df)
-
-## let's use the marco trainer
-def marcoTf(path):
-    sess =  tf.Session(graph=tf.Graph())
-    tf.saved_model.loader.load(sess, ["serve"], path)
-    graph = tf.get_default_graph()
-    
-    
-def transferLearner(max_iter, reg_param, elastic_net_param):
-    ## let's setup some parameters
-    featurizer = DeepImageFeaturizer(inputCol="image", outputCol="features", modelName="InceptionV3")
-    lr = LogisticRegression(maxIter=max_iter, 
-                            regParam=reg_param,
-                            elasticNetParam=elastic_net_param, 
-                            labelCol="label")
-    p = Pipeline(stages=[featurizer, lr])
-    
-    ## return the pipeline
-    return(p)
-
-## run the model
-## return a model
-def runModel(train_df, pipeline):
-    ## run the model
-    p_model = pipeline.fit(train_df)
-    
-    ## return the model
-    return(p_model)
-
-## get some predictions
-## returns a dataframe
-def predictWithModel(test_df, p_model):
-    predictions = p_model.transform(test_df)
-    df = p_model.transform(test_df)
-    
-    ## return the dataframe
-    return(df)
-
-## validate
-## returns the accuracy
-def validate(df):
-    predictionAndLabels = df.select("prediction", "label")
-    evaluator = MulticlassClassificationEvaluator(metricName="accuracy")
-    
-    ## return the accuracy
-    return(evaluator.evaluate(predictionAndLabels))
-
-## write to postgres database
-## THIS FUNCTION SHOULD BE SPLIT INTO ITS OWN FILE
-## WHEN THE MODEL PARAMETERS CAN BE STORED ON DISK
-def writeToPostgreSQL(sql):
-    ## let's just write grab the crystal info here
-    postgres_df = sql.select("image_id", "label_text").selectExpr("image_id as id", "label_text as crystal")
-    postgres_df = postgres_df.withColumn('crystal_bool', when(postgres_df.crystal == "Crystals", True).otherwise(False)).drop(postgres_df.crystal).select(col("crystal_bool").alias("crystal"),col("id"))
-    postgres_df = postgres_df.select("id", "crystal")
-    postgres_df = postgres_df.withColumn("id", postgres_df.id.cast('integer'))
-    ## let's add the dataframe to Postgresql
-    postgres_df.write.jdbc(url = "jdbc:postgresql://"+os.environ["POSTGRES_URL"]+":5432/crystal-base", 
-                          table = "marcos",
-                          mode = "append",
-                          properties={"driver": 'org.postgresql.Driver',
-                                      "user": os.environ["POSTGRES_USER"],
-                                      "password": os.environ["POSTGRES_PASSWORD"]}) 
+    ## return the values
+    return(values)
 
 if __name__ == '__main__':
     sc = SparkContext(conf=SparkConf().setAppName("Crystal-Image-Classifier"))
@@ -126,5 +67,8 @@ if __name__ == '__main__':
     os.environ["POSTGRES_URL"]=sys.argv[4]
     os.environ["POSTGRES_USER"]=sys.argv[5]
     os.environ["POSTGRES_PASSWORD"]=sys.argv[6]
+    ## create spark session
+    spark_session = SparkSession.builder.appName("Crystal-Image-Classifier-Simple").getOrCreate()
+    sc = spark_session.sparkContext
     ## run the main insertion function
     main(sc)

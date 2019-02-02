@@ -8,12 +8,11 @@ function classifyImagesMarco {
     ## getting the marco saved model
     echo "Getting marco trained model..."
     wget https://storage.googleapis.com/marco-168219-model/savedmodel.zip
-    unzip savedmodel.zip
     ## copy the pyspark python script
     echo "Copying python script to spark master..."
     scp src/python/classifyImagesMarco.py ubuntu@${spark_hosts[0]}:
     echo "Copying marco saved model to spark master..."
-    scp savedmodel/saved_model.pb ubuntu@${spark_hosts[0]}:
+    scp savedmodel.zip ubuntu@${spark_hosts[0]}:
 
     ## launch the command
     echo "Running spark classification job..."
