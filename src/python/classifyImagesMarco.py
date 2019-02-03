@@ -6,6 +6,7 @@ from pyspark.sql.types import StringType, StructField, StructType, BooleanType
 from pyspark.sql import *
 import tensorflow as tf
 from numpy import argmax
+from zipfile import ZipFile
 
 ## main insertion function
 def main(sc):
@@ -23,15 +24,24 @@ def main(sc):
     crystal_mapped = crystal_imgs.mapPartitions(classifyImagesPartition)
     ##  return results as a dataframe
     df = spark_session.createDataFrame(crystal_mapped, schema)
-    ## we have too many partitions
-    df.rdd.coalesce(100)
+    ## we have too many partitions this
+    #df.rdd.coalesce(100)
+    df.write.jdbc(url = "jdbc:postgresql://"+os.environ["POSTGRES_URL"]+":5432/crystal-base",
+                  table = "marcos",
+                  mode = "append",
+                  properties={"driver": 'org.postgresql.Driver',
+                              "user": os.environ["POSTGRES_USER"],
+                               "password": os.environ["POSTGRES_PASSWORD"],
+                               "usessl" : "true",
+                               "reWriteBatchedInserts" : "true",
+                               "batchsize" : "10000"})
 
 ## get the RDDs for images as <url, bytestring>
 def getImages(sc, addr):
     ## get an rdd for the binaryfiles from the crystal_imgs
     ## use to reduce the number of transfers of uncompressed
     ## imgs
-    crystal_imgs = sc.binaryFiles(addr+"/marcos-data.bak/test-jpg/Clear/*.jpeg")
+    crystal_imgs = sc.binaryFiles(addr+"/marcos-data.bak/test-jpg/*/*.jpeg")
     return(crystal_imgs)
         
 ## classify partitions of images to reduce writes
@@ -49,9 +59,10 @@ def classifyImagesPartition(partition):
     ## classify images as a batch
     prediction = predictor(dictionary)
     ## get the predicted state of each image
-    ## index of crystal value is 1
-    ## check if we're also above 50% sure we have a crystal
-    bools = [1 == argmax(array) and argmax(array) > 0.5 for array in prediction["scores"]]
+    ## the first reported class is the right one 
+    test_string = bytes("Crystals", 'ascii')
+    bools = [test_string == array[0] for array in prediction["classes"]]
+    #bools = [1 == argmax(array) for array in prediction["scores"]]
     ## we want to return the values as key value tuples
     ## <s3_url, crystal boolean>
     values = [(url, bool(crystal_bool)) for url, crystal_bool in zip(urls, bools)]
@@ -68,7 +79,7 @@ if __name__ == '__main__':
     os.environ["POSTGRES_USER"]=sys.argv[5]
     os.environ["POSTGRES_PASSWORD"]=sys.argv[6]
     ## create spark session
-    spark_session = SparkSession.builder.appName("Crystal-Image-Classifier-Simple").getOrCreate()
+    spark_session = SparkSession.builder.appName("Crystal-Image-Classifier-Marco").getOrCreate()
     sc = spark_session.sparkContext
     ## run the main insertion function
     main(sc)
