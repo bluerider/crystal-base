@@ -118,18 +118,24 @@ case $1 in
     --classify-images|--run-pipeline)
         case $2 in
             marco)
-            classifyImagesMarco
+            echo "Running Marco classifier..."
+            classifyImages marco
             ;;
             Inceptionv3)
-            classifyImages
+            echo "Not fully supported yet!"
+            #classifyImages inception
             ;;
             simple|*)
-            classifyImagesSimple
+            echo "Running simple classifier..."
+            classifyImages simple
             ;;
         esac
         ;;
     --multiply-images)
         multiplyImages
+        ;;
+    --run-web-server)
+        runWebServer
         ;;
     --help|*)
         cat <<EOF
@@ -138,6 +144,7 @@ Unknown option : $1
 Usage : main.sh [option]
 
     --run                    Setup and run the crystal-base pipeline
+    --run-web-server         Run the web server
     --config                 Setup the crystal-base pipeline
     --setup-config           Setup the bash environment variables
     --setup-pegasus          Setup and install pegasus
