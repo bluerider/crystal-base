@@ -1,13 +1,11 @@
 ## got to pass in the aws keys by arguments
 import sys, os
 from pyspark import SparkContext, SparkConf, SparkFiles
-from pyspark.ml.image import ImageSchema
+from pyspark.sql import SparkSession
 from pyspark.sql.types import StringType, StructField, StructType, BooleanType
-from pyspark.sql import *
 import tensorflow as tf
-from numpy import argmax
 from zipfile import ZipFile
-from classifyImagesMarcoPartition import classifyImagesMaroPartition
+from classifyImagesMarcoPartition import classifyImagesMarcoPartition
 from classifyImagesSimplePartition import classifyImagesSimplePartition
 
 ## main insertion function
@@ -24,7 +22,7 @@ def main(sc):
                          StructField('crystal', BooleanType(), False)])
     ## set the DAG
     if os.environ["CLASSIFIER_TYPE"] == "marco":
-        crystal_mapped = crystal_imgs.mapPartitions(classifyImagesMaroPartition)
+        crystal_mapped = crystal_imgs.mapPartitions(classifyImagesMarcoPartition)
     ## use the simple url classifier if we're not using the Marco classifier
     else:
         crystal_mapped = crystal_imgs.mapPartitions(classifyImagesSimplePartition)

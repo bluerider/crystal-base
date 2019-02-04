@@ -1,10 +1,10 @@
 ## got to pass in the aws keys by arguments
+import os
 import tensorflow as tf
-from numpy import argmax
 from zipfile import ZipFile
         
 ## classify partitions of images to reduce writes
-def classifyImagesMaroPartition(partition):
+def classifyImagesMarcoPartition(partition):
     model = ZipFile('savedmodel.zip', 'r')\
         .extractall("")
     predictor = tf.contrib.predictor.from_saved_model('savedmodel')
