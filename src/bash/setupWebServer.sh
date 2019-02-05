@@ -9,6 +9,7 @@ function setupWebServer {
     
     ## install needed packages on web-server
     server_hosts=($(cat ${PEGASUS_HOME}/tmp/crystal-project-web-server/public_dns))
+    peg install crystal-project-web-server ssh
     ssh ubuntu@${server_hosts[0]} '
         sudo apt-get update
         sudo apt-get install python3-pip -y
