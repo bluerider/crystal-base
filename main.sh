@@ -134,8 +134,11 @@ case $1 in
     --multiply-images)
         multiplyImages
         ;;
+    --setup-web-server)
+        setupWebServer
+        ;;
     --run-web-server)
-        runWebServer
+        runDashServer
         ;;
     --help|*)
         cat <<EOF
@@ -151,6 +154,7 @@ Usage : main.sh [option]
     --setup-hadoop           Setup hadoop clusters
     --setup-spark            Setup spark clusters
     --setup-database         Setup database clusters
+    --setup-web-server        Setup flask web server
     --classify-images <arg>  Classify images from S3; args : marco, Inceptionv3, simple
     --multiply-images        Transform and multiply images from S3 and save back to bucket
     --run-pipeline           Run the crystal-base pipeline
