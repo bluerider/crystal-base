@@ -13,4 +13,4 @@ All protein crystal data was obtained from the [Marco Database](https://marco.cc
 ![Image of Protein Crystal Screen](images/Crystal-Screen.png)
 
 # Try it out!
-Upload protein crystal jpeg images at [Crystal-Base](http://crystal-base.com)
+Upload protein crystal jpeg images at [Crystal-Base](http://www.crystal-base.com)
