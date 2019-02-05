@@ -17,28 +17,30 @@ def main(sc):
     addr = "s3a:/"
     ## get the crystal images
     crystal_imgs = getImages(sc, addr)
+    ## don't run all the images at once, let's split them up in partitions of 10
+    crystal_imgs_split = crystal_imgs.randomSplit([0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10])
     ##  set the schema
     schema = StructType([StructField('id', StringType(), False),
                          StructField('crystal', BooleanType(), False)])
     ## set the DAG
     if os.environ["CLASSIFIER_TYPE"] == "marco":
-        crystal_mapped = crystal_imgs.mapPartitions(classifyImagesMarcoPartition)
+        crystal_mapped_split = [crystal_imgs.mapPartitions(classifyImagesMarcoPartition) for crystal_imgs in crystal_imgs_split]
     ## use the simple url classifier if we're not using the Marco classifier
     else:
-        crystal_mapped = crystal_imgs.mapPartitions(classifyImagesSimplePartition)
+        crystal_mapped_split = [crystal_imgs.mapPartitions(classifyImagesSimplePartition) for crystal_imgs in crystal_imgs_split]
     ##  return results as a dataframe
-    df = spark_session.createDataFrame(crystal_mapped, schema)
-    ## we have too many partitions this
-    #df.rdd.coalesce(100)
-    df.write.jdbc(url = "jdbc:postgresql://"+os.environ["POSTGRES_URL"]+":5432/crystal-base",
-                  table = "marcos",
-                  mode = "append",
-                  properties={"driver": 'org.postgresql.Driver',
-                              "user": os.environ["POSTGRES_USER"],
-                               "password": os.environ["POSTGRES_PASSWORD"],
-                               "usessl" : "true",
-                               "reWriteBatchedInserts" : "true",
-                               "batchsize" : "10000"})
+    for crystal_mapped in crystal_mapped_split[0:1]:
+        df = spark_session.createDataFrame(crystal_mapped, schema)
+        ## we have too many partitions this
+        df.write.jdbc(url = "jdbc:postgresql://"+os.environ["POSTGRES_URL"]+":5432/crystal-base",
+                      table = "marcos",
+                      mode = "append",
+                      properties={"driver": 'org.postgresql.Driver',
+                                  "user": os.environ["POSTGRES_USER"],
+                                   "password": os.environ["POSTGRES_PASSWORD"],
+                                   "usessl" : "true",
+                                   "reWriteBatchedInserts" : "true",
+                                   "batchsize" : "10000"})
 
 ## get the RDDs for images as <url, bytestring>
 def getImages(sc, addr):
