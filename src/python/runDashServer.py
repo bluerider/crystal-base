@@ -8,9 +8,11 @@ from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 import pandas as pd
 from classifyImagesMarcoPartitionOneOff import classifyImagesMarcoPartitionOneOff
+from classifyImagesMarcoPartition import classifyImagesMarcoPartition
 
 ## start the app
 app = dash.Dash()
+app.title = "Crystal-Base"
 app.scripts.config.serve_locally = True
 
 host = sys.argv[1]
@@ -85,6 +87,7 @@ def parse_contents(contents, values, date, ):
         #    'wordBreak': 'break-all'
         #})
     ])
+        
 
 @app.callback(Output('output-image-upload', 'children'),
               [Input('upload-image', 'contents')],
@@ -124,4 +127,4 @@ def update_metrics(n):
 
 if __name__ == '__main__':
     ## run the app as a server
-    app.run_server(debug=True, port=5000, host = '0.0.0.0')
+    app.run_server(port=5000, host = '0.0.0.0')

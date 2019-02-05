@@ -99,6 +99,7 @@ case $1 in
         launchHadoop
         launchSpark
         launchDatabase
+        setupWebServer
         ;;
     --setup-config)
         setupConfig
