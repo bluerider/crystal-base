@@ -24,10 +24,15 @@ db = create_engine('postgresql://%s:%s@%s:5432/%s'%(user, password, host, dbname
 
 ## setup the navigation bar
 navbar = dbc.NavbarSimple(
-    children = [
-        dbc.NavItem(dbc.NavLink("Github",
-                                href = "https://github.com/bluerider/crystal-base",
-                                external_link = True))],
+    children = [html.Div([dbc.NavItem(id = 'sql_count'),
+                          dcc.Interval(id = 'interval-component',
+                                       interval = 1*1000,
+                                       n_intervals = 0)],
+                         style = {'padding-left' : '10px',
+                                  'padding-right' : '10px'}),
+                html.A([html.Img(src="https://media.rehansaeed.com/rehansaeed/2015/10/GitHub-Logo-32x32.png")],
+                       href = 'https://github.com/bluerider/crystal-base',
+                       target = "_blank")],
     brand = "Crystal-Base",
     brand_href = '#',
     sticky = "top",
@@ -35,22 +40,15 @@ navbar = dbc.NavbarSimple(
 
 ## setup the body of the document
 body = dbc.Container(
-    [dbc.Row(html.Div([html.Div(id='live-update-text'),
-                       dcc.Interval(id='interval-component',
-                                    interval=1*1000,
-                                    n_intervals=0)])),
-             html.Div([dcc.Upload(id = 'upload-image',
-                                  children=html.Div(['Upload images']),
-                                  style = {'width': '100%',
-                                           'height': '60px',
-                                           'lineHeight': '60px',
-                                           'borderWidth': '1px',
-                                           'borderStyle': 'dashed',
-                                           'borderRadius': '5px',
-                                           'textAlign': 'center'},
+    [html.Div([dcc.Upload(id = 'upload-image',
+                          children=html.Div(['Upload images']),
+                          style = {'lineHeight': '60px',
+                                   'borderStyle': 'dashed',
+                                   'borderRadius': '5px',
+                                   'textAlign': 'center'},
                                   ## allow uploading multiple files
-                                  multiple = True)]),
-             html.Div(id = 'output-image-upload')
+                          multiple = True)]),
+     html.Div(id = 'output-image-upload')
     ])
 
 ## set the css theme
@@ -91,7 +89,7 @@ def update_output(list_of_contents, list_of_names, list_of_dates):
         return children
     
 ## update text
-@app.callback(Output('live-update-text', 'children'),
+@app.callback(Output('sql_count', 'children'),
               [Input('interval-component', 'n_intervals')])
 def update_metrics(n):
     with db.connect() as con:
@@ -103,10 +101,11 @@ def update_metrics(n):
             SELECT count(*) FROM marcos where crystal is false;
             """
         negative_count = str(con.execute(sql_query).fetchone()[0])
-    return html.Div([
-        html.Span(' Positive: '+positive_count+'; Negative: '+negative_count)
-    ])
-    
+    return html.Div([dbc.Button("Crystals: "+positive_count,
+                                 color = "primary"),
+                     dbc.Button("Junk: "+negative_count,
+                                color = "secondary")])
+
 if __name__ == '__main__':
     ## run the app as a server
     ## use 5001 to avoid screwing
