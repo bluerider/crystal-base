@@ -69,10 +69,6 @@ def parse_contents(contents, values, date, ):
         html.Hr()
     ])
 
-## resize images and return as html
-## compatible strings
-
-        
 ## call back for upload images
 @app.callback(Output('output-image-upload', 'children'),
               [Input('upload-image', 'contents')],
@@ -105,7 +101,7 @@ def update_metrics(n):
             """
         negative_count = str(con.execute(sql_query).fetchone()[0])
     return html.Div([dbc.Button("Crystals: "+positive_count,
-                                 color = "primary"),
+                                 color = "success"),
                      dbc.Button("Junk: "+negative_count,
                                 color = "secondary")])
 
