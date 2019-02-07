@@ -11,7 +11,9 @@ import pandas as pd
 from classifyImagesMarcoPartitionOneOff import classifyImagesMarcoPartitionOneOff
 
 ## start the ap
-app = dash.Dash()
+app = dash.Dash(__name__, 
+                static_folder = 'static',
+                external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "Crystal-Base"
 app.scripts.config.serve_locally = True
 
@@ -30,7 +32,7 @@ navbar = dbc.NavbarSimple(
                                        n_intervals = 0)],
                          style = {'padding-left' : '10px',
                                   'padding-right' : '10px'}),
-                html.A([html.Img(src="https://media.rehansaeed.com/rehansaeed/2015/10/GitHub-Logo-32x32.png")],
+                html.A([html.Img(src='/static/GitHub-Mark-32px.png')],
                        href = 'https://github.com/bluerider/crystal-base',
                        target = "_blank")],
     brand = "Crystal-Base",
@@ -51,9 +53,6 @@ body = dbc.Container(
      html.Div(id = 'output-image-upload')
     ])
 
-## set the css theme
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-
 ## set the app layout
 app.layout = html.Div([navbar, body])
 
@@ -69,6 +68,10 @@ def parse_contents(contents, values, date, ):
         html.Img(src=contents),
         html.Hr()
     ])
+
+## resize images and return as html
+## compatible strings
+
         
 ## call back for upload images
 @app.callback(Output('output-image-upload', 'children'),
