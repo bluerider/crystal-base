@@ -1,6 +1,7 @@
 import os, datetime, base64, sys
 import dash
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 import dash_html_components as html
 import dash_table_experiments as dash_table
@@ -8,87 +9,70 @@ from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 import pandas as pd
 from classifyImagesMarcoPartitionOneOff import classifyImagesMarcoPartitionOneOff
-from classifyImagesMarcoPartition import classifyImagesMarcoPartition
 
-## start the app
+## start the ap
 app = dash.Dash()
 app.title = "Crystal-Base"
 app.scripts.config.serve_locally = True
 
+## setup the postgres connector
 host = sys.argv[1]
 user = sys.argv[2]
 password = sys.argv[3]
 dbname = sys.argv[4]
 db = create_engine('postgresql://%s:%s@%s:5432/%s'%(user, password, host, dbname))
 
-app.layout = html.Div([
-    dcc.Upload(
-        id='upload-image',
-        children=html.Div([
-            'Upload images'
-        ]),
-        style={
-            'width': '100%',
-            'height': '60px',
-            'lineHeight': '60px',
-            'borderWidth': '1px',
-            'borderStyle': 'dashed',
-            'borderRadius': '5px',
-            'textAlign': 'center',
-            'margin': '10px'
-        },
-        # Allow multiple files to be uploaded
-        multiple=True
-    ),
-    html.Button('Demo', id='demo',
-               style={
-                   'width' : '100%',
-                   'textAlign' : 'center'
-               }),
-    html.Div([
-        html.Div(id='live-update-text'),
-        dcc.Interval(
-            id='interval-component',
-            interval=1*1000,
-            n_intervals=0)
-    ]),
-    html.Div(id='output-image-upload'),
-])
+## setup the navigation bar
+navbar = dbc.NavbarSimple(
+    children = [
+        dbc.NavItem(dbc.NavLink("Github",
+                                href = "https://github.com/bluerider/crystal-base",
+                                external_link = True))],
+    brand = "Crystal-Base",
+    brand_href = '#',
+    sticky = "top",
+    color = "#6699ff")
 
-def resizeImgs(imgs):
-    resized_imgs = []
-    ## generate the base64 string padding string
-    padding = "data:image/jpeg;base64,"
-    for img in imgs:
-        ## read the image as a byte array
-        image = Image.open(io.BytesIO(img))
-        resized_img = image.resize(400,300)
-        ## open a new jpeg buffer
-        jpeg_buffer = io.ByteIO()
-        ## save the image as a jpeg file
-        resized_img.save(jpeg_buffer, format = "JPEG")
-        ## we need to convert the jpeg file to base64
-        ## and append to array
-        resized_imgs += padding + str(base64.b64encode(jpeg_buffer))[2:]
-    ## return the resized images
-    return(resized_imgs)
+## setup the body of the document
+body = dbc.Container(
+    [dbc.Row(html.Div([html.Div(id='live-update-text'),
+                       dcc.Interval(id='interval-component',
+                                    interval=1*1000,
+                                    n_intervals=0)])),
+             html.Div([dcc.Upload(id = 'upload-image',
+                                  children=html.Div(['Upload images']),
+                                  style = {'width': '100%',
+                                           'height': '60px',
+                                           'lineHeight': '60px',
+                                           'borderWidth': '1px',
+                                           'borderStyle': 'dashed',
+                                           'borderRadius': '5px',
+                                           'textAlign': 'center'},
+                                  ## allow uploading multiple files
+                                  multiple = True)]),
+             html.Div(id = 'output-image-upload')
+    ])
 
+## set the css theme
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+## set the app layout
+app.layout = html.Div([navbar, body])
+
+## parse the contents of passed images and
+## return a html divider
 def parse_contents(contents, values, date, ):
     name, crystal_bool = values
     return html.Div([
-        html.H5(name),
+        html.Hr(),
+        html.H5(name+"; Prediction: "+str(crystal_bool)),
         # HTML images accept base64 encoded strings in the same format
         # that is supplied by the upload
         html.Img(src=contents),
-        html.Hr(),
-        html.Div('Prediction : '+str(crystal_bool)),
-        #html.Pre(contents[0:200] + '...', style={
-        #    'whiteSpace': 'pre-wrap',
-        #    'wordBreak': 'break-all'
-        #})
+        html.Hr()
     ])
         
-
+## call back for upload images
 @app.callback(Output('output-image-upload', 'children'),
               [Input('upload-image', 'contents')],
               [State('upload-image', 'filename'),
@@ -100,13 +84,12 @@ def update_output(list_of_contents, list_of_names, list_of_dates):
         ## classify the images
         values = classifyImagesMarcoPartitionOneOff(zip(list_of_names, imgs))
         ## we got to resize the pictures to form a grid that will fit
-        #resized_imgs = resizeImgs(imgs)
         resized_imgs = list_of_contents
         children = [
             parse_contents(c, n, d) for c, n, d in
             zip(resized_imgs, values, list_of_dates)]
         return children
-
+    
 ## update text
 @app.callback(Output('live-update-text', 'children'),
               [Input('interval-component', 'n_intervals')])
@@ -121,10 +104,11 @@ def update_metrics(n):
             """
         negative_count = str(con.execute(sql_query).fetchone()[0])
     return html.Div([
-        html.Span('Positive: '+positive_count+"     Negative: "+negative_count),
+        html.Span(' Positive: '+positive_count+'; Negative: '+negative_count)
     ])
     
-
 if __name__ == '__main__':
     ## run the app as a server
+    ## use 5001 to avoid screwing
+    ## with the currently running server
     app.run_server(port=5000, host = '0.0.0.0')

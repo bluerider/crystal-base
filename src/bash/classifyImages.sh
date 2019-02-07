@@ -18,6 +18,6 @@ function classifyImages {
         export SPARK_HOME=/usr/local/spark
         export HADOOP_HOME=/usr/local/hadoop
         wget -N https://storage.googleapis.com/marco-168219-model/savedmodel.zip
-        spark-submit --packages org.apache.hadoop:hadoop-aws:2.7.1,databricks:spark-deep-learning:0.3.0-spark2.2-s_2.11,org.postgresql:postgresql:42.1.4 --master spark://${spark_hosts[0]}:7077 --executor-memory 30G --driver-memory 40G --py-files classifyImages.py,classifyImagesMarcoPartition.py,classifyImagesSimplePartition.py --files savedmodel.zip classifyImages.py $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION ${postgresql_hosts[0]} $POSTGRES_USER $POSTGRES_PASSWORD $1
+        spark-submit --packages org.apache.hadoop:hadoop-aws:2.7.1,org.postgresql:postgresql:42.1.4 --master spark://${spark_hosts[0]}:7077 --driver-memory 63G --num-executors 6 --executor-cores 15 --executor-memory 51GB --py-files classifyImages.py,classifyImagesMarcoPartition.py,classifyImagesSimplePartition.py --files savedmodel.zip classifyImages.py $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION ${postgresql_hosts[0]} $POSTGRES_USER $POSTGRES_PASSWORD $1
         "
 }

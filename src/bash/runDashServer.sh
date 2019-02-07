@@ -7,12 +7,13 @@ function runDashServer {
     postgresql_hosts=($(cat ${PEGASUS_HOME}/tmp/crystal-project-database-cluster/public_dns))
     ## copy the flask python scripts
     echo "Copying python scripts to web server..."
-    for a in src/python/{runDashServer,classifyImagesMarcoPartitionOneOff}.py; do
-        scp "$a" ubuntu@${server_hosts[0]}:
+    for a in src/python/{dash-bootstrap,classifyImagesMarcoPartitionOneOff.py}; do
+        scp -r "$a" ubuntu@${server_hosts[0]}:
     done
     ## run the web app
     ssh ubuntu@${server_hosts[0]} "
         wget -N https://storage.googleapis.com/marco-168219-model/savedmodel.zip
-        python3 runDashServer.py ${postgresql_hosts[0]} $POSTGRES_USER $POSTGRES_PASSWORD crystal-base
+        mv classifyImagesMarcoPartitionOneOff.py dash-bootstrap/
+        python3 dash-bootstrap/runDashServer.py ${postgresql_hosts[0]} $POSTGRES_USER $POSTGRES_PASSWORD crystal-base
         "
 }

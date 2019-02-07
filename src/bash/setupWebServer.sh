@@ -14,6 +14,6 @@ function setupWebServer {
         sudo apt-get update
         sudo apt-get install python3-pip -y
         sudo pip3 install -U setuptools
-        sudo pip3 install dash dash_core_components dash_html_components dash_table_experiments sqlalchemy sqlalchemy_utils pandas tensorflow psycopg2
+        sudo pip3 install dash dash_core_components dash_html_components dash_table_experiments sqlalchemy sqlalchemy_utils pandas tensorflow psycopg2 gunicorn dash-boostrap-components
         '
 }

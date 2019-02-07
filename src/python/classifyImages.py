@@ -19,6 +19,7 @@ def main(sc):
     crystal_imgs = getImages(sc, addr)
     ## don't run all the images at once, let's split them up in partitions of 10
     crystal_imgs_split = crystal_imgs.randomSplit([0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10])
+    #crystal_imgs_split = [crystal_imgs]
     ##  set the schema
     schema = StructType([StructField('id', StringType(), False),
                          StructField('crystal', BooleanType(), False)])
@@ -29,7 +30,7 @@ def main(sc):
     else:
         crystal_mapped_split = [crystal_imgs.mapPartitions(classifyImagesSimplePartition) for crystal_imgs in crystal_imgs_split]
     ##  return results as a dataframe
-    for crystal_mapped in crystal_mapped_split[0:1]:
+    for crystal_mapped in crystal_mapped_split:
         df = spark_session.createDataFrame(crystal_mapped, schema)
         ## we have too many partitions this
         df.write.jdbc(url = "jdbc:postgresql://"+os.environ["POSTGRES_URL"]+":5432/crystal-base",
@@ -47,7 +48,7 @@ def getImages(sc, addr):
     ## get an rdd for the binaryfiles from the crystal_imgs
     ## use to reduce the number of transfers of uncompressed
     ## imgs
-    crystal_imgs = sc.binaryFiles(addr+"/marcos-data.bak/test-jpg/Clear/*.jpeg")
+    crystal_imgs = sc.binaryFiles(addr+"/marcos-data.bak/test-jpg/*/*.jpeg")
     return(crystal_imgs)
 
 if __name__ == '__main__':
