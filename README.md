@@ -7,7 +7,6 @@ With Crystal-base I decided to use a transfer learning and the [inceptionv3](htt
 # Architecture
 ![Image of Pipeline](images/Pipeline.png)
 
-/
 # Dataset
 All protein crystal data was obtained from the [Marco Database](https://marco.ccr.buffalo.edu/)
 ![Image of Protein Crystal Screen](images/Crystal-Screen.png)
