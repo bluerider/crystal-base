@@ -31,6 +31,7 @@ Run `./main.sh --setup-web-server` to setup a web server.
 ### Ingestion
 
 Crystal base ingests files from the [Marco Database](https://marco.ccr.buffalo.edu/) using **bash** and an EC2 instance to an S3 bucket.
+
 Run `source src/bash/ingestMarcoFiles.sh && ingestMarcosFiles` to ingest files
 
 ### Training
@@ -46,6 +47,7 @@ Run `./main.sh --classify-images simple` to use the simple test classifier. Resu
 ## Web App
 
 Crystal-base has a web interface that runs its own instance of the trained tensorflow model.
+
 Run `./main.sh --run-webs-server` to run this web-server instance.
 
 ### Try it out!
