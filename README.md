@@ -38,6 +38,8 @@ Run `source src/bash/ingestMarcoFiles.sh && ingestMarcosFiles` to ingest files
 
 Crystal-base uses transfer learning [inceptionv3](https://www.tensorflow.org/tutorials/images/image_recognition) training model to identify protein drop crystals from the [Marco Database](https://marco.ccr.buffalo.edu/).
 
+Run `python3 src/python/classifyImagesTrainer.py` to train the image classifier and write to a Postgres Database.
+
 ### Distributed Image Classification
 
 Data is ingested with Spark from S3 buckets and batch processedon a distributed tensorflow cluster using executors running their own tensorflow instances.
