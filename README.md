@@ -21,11 +21,17 @@ All protein crystal data was obtained from the [Marco Database](https://marco.cc
 ### Setting up AWS
 
 Crystal-base uses **pegasus** to setup AWS clusters with configurations in **yaml** files.
+
 Run `./main.sh --setup-pegasus` to install pegasus.
+
 Run `./main.sh --setup-config` to setup the bash environment
+
 Run `./main.sh --setup-database` to setup a Postgres database.
+
 Run `./main.sh --setup-hadoop` to setup a hadoop cluster.
+
 Run `./main.sh --setup-spark` to setup a spark cluster
+
 Run `./main.sh --setup-web-server` to setup a web server.
 
 ### Ingestion
