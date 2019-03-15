@@ -18,19 +18,35 @@ All protein crystal data was obtained from the [Marco Database](https://marco.cc
 ## Architecture
 ![Image of Pipeline](images/Pipeline.png)
 
+### Setting up AWS
+
+Crystal-base uses **pegasus** to setup AWS clusters with configurations in **yaml** files.
+Run `./main.sh --setup-pegasus` to install pegasus.
+Run `./main.sh --setup-config` to setup the bash environment
+Run `./main.sh --setup-database` to setup a Postgres database.
+Run `./main.sh --setup-hadoop` to setup a hadoop cluster.
+Run `./main.sh --setup-spark` to setup a spark cluster
+Run `./main.sh --setup-web-server` to setup a web server.
+
 ### Ingestion
 
-Data is ingested with Spark from S3 buckets and batch processed.
+Crystal base ingests files from the [Marco Database](https://marco.ccr.buffalo.edu/) using **bash** and an EC2 instance to an S3 bucket.
+Run `source src/bash/ingestMarcoFiles.sh && ingestMarcosFiles` to ingest files
 
 ### Training
 
-With Crystal-base I decided to use a transfer learning and the [inceptionv3](https://www.tensorflow.org/tutorials/images/image_recognition) training model to identify protein drop crystals from the [Marco Database](https://marco.ccr.buffalo.edu/).
+Crystal-base uses transfer learning [inceptionv3](https://www.tensorflow.org/tutorials/images/image_recognition) training model to identify protein drop crystals from the [Marco Database](https://marco.ccr.buffalo.edu/).
 
 ### Distributed Image Classification
 
 Data is ingested with Spark from S3 buckets and batch processedon a distributed tensorflow cluster using executors running their own tensorflow instances.
 
+Run `./main.sh --classify-images simple` to use the simple test classifier. Results are expected to output to a Postgres database.
+
 ## Web App
+
+Crystal-base has a web interface that runs its own instance of the trained tensorflow model.
+Run `./main.sh --run-webs-server` to run this web-server instance.
 
 ### Try it out!
 
