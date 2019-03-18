@@ -56,6 +56,8 @@ Run `./main.sh --classify-images simple` to use the simple test classifier. Resu
 
 Crystal-base has a web interface that runs its own instance of the trained tensorflow model.
 
+![Image of Web App](images/crystal-base-web-app.png)
+
 Run `./main.sh --run-webs-server` to run this web-server instance.
 
 ### Try it out!
