@@ -1,0 +1,1 @@
+This folder contains the functions needed to run the crystal-base pipeline. I highly suggest interacting with crystal-base using `main.sh <command>` instead of calling these functions directly.
