@@ -10,6 +10,11 @@ from classifyImagesSimplePartition import classifyImagesSimplePartition
 
 ## main insertion function
 def main(sc):
+    """
+    Main insertion function.
+    Grabs files from s3 and classify them with
+    tensorflow, output results to postgres table.
+    """
     ## we need to pass in the AWS keys
     sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
     sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
@@ -45,13 +50,16 @@ def main(sc):
 
 ## get the RDDs for images as <url, bytestring>
 def getImages(sc, addr):
-    ## get an rdd for the binaryfiles from the crystal_imgs
-    ## use to reduce the number of transfers of uncompressed
-    ## imgs
+    """
+    Return an RDD of images from S3.
+    """
     crystal_imgs = sc.binaryFiles(addr+"/marcos-data.bak/test-jpg/*/*.jpeg")
     return(crystal_imgs)
 
 if __name__ == '__main__':
+    """
+    Setup Spark session and AWS, postgres access keys.
+    """
     sc = SparkContext(conf=SparkConf().setAppName("Crystal-Image-Classifier"))
     os.environ["AWS_ACCESS_KEY_ID"] = sys.argv[1]
     os.environ["AWS_SECRET_ACCESS_KEY"] = sys.argv[2]

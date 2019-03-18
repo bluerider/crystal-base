@@ -59,6 +59,10 @@ app.layout = html.Div([navbar, body])
 ## parse the contents of passed images and
 ## return a html divider
 def parse_contents(contents, values, date, ):
+    """
+    Return a HTML divider for prediction results
+    and the uploaded image.
+    """
     name, crystal_bool = values
     return html.Div([
         html.Hr(),
@@ -75,6 +79,11 @@ def parse_contents(contents, values, date, ):
               [State('upload-image', 'filename'),
                State('upload-image', 'last_modified')])
 def update_output(list_of_contents, list_of_names, list_of_dates):
+    """
+    Classify uploaded images.
+    Returns classification of images as well as the image itself
+    for display on web app.
+    """
     if list_of_contents is not None:
         ## get the raw image byte date
         imgs = [base64.b64decode(img[23:]) for img in list_of_contents]
@@ -91,6 +100,11 @@ def update_output(list_of_contents, list_of_names, list_of_dates):
 @app.callback(Output('sql_count', 'children'),
               [Input('interval-component', 'n_intervals')])
 def update_metrics(n):
+    """
+    Connect to postgres and get the current number of classified images.
+    Return the count for negative and positive results for display
+    in the web app.
+    """
     with db.connect() as con:
         sql_query = """
             SELECT count(*) FROM marcos where crystal is true;
@@ -106,6 +120,9 @@ def update_metrics(n):
                                 color = "secondary")])
 
 if __name__ == '__main__':
+    """
+    Run the app.
+    """
     ## run the app as a server
     ## use 5001 to avoid screwing
     ## with the currently running server

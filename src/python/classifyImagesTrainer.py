@@ -9,6 +9,11 @@ from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 
 ## main insertion function
 def main(sc):
+    """
+    Main insertion function.
+    Train an inceptionv3 neuralnetwork to classify crystal images.
+    Refits the output layer to fit a binary classifier for crystal images.
+    """
     ## we need to pass in the AWS keys
     sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
     sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
@@ -29,6 +34,9 @@ def main(sc):
 ## let's work on getting this classifier up
 ## returns a training and test dataframe
 def genDataFrames(url):
+    """
+    Return a train dataframe and a test dataframe for training.
+    """
     ## training set
     ## let's get and combine the negative image data set
     clear_train_imgs = ImageSchema.readImages(url+"train-jpg/Clear/*.jpeg").withColumn("label", lit(0))
@@ -59,6 +67,9 @@ def genDataFrames(url):
 ## let's setup the trainer
 ## returns a pipeline
 def transferLearner(max_iter, reg_param, elastic_net_param):
+    """
+    Setup the inceptionv3 transfer learner pipeline.
+    """
     ## let's setup some parameters
     featurizer = DeepImageFeaturizer(inputCol="image", outputCol="features", modelName="InceptionV3")
     lr = LogisticRegression(maxIter=max_iter, 
@@ -73,6 +84,9 @@ def transferLearner(max_iter, reg_param, elastic_net_param):
 ## run the model
 ## return a model
 def runModel(train_df, pipeline):
+    """
+    Run the model with a training dataframe and a pipeline.
+    """
     ## run the model
     p_model = pipeline.fit(train_df)
     
@@ -82,6 +96,10 @@ def runModel(train_df, pipeline):
 ## get some predictions
 ## returns a dataframe
 def predictWithModel(test_df, p_model):
+    """
+    Predict classification results with test dataframe
+    and trained model.
+    """
     predictions = p_model.transform(test_df)
     df = p_model.transform(test_df)
     
@@ -91,6 +109,9 @@ def predictWithModel(test_df, p_model):
 ## validate
 ## returns the accuracy
 def validate(df):
+    """
+    Validate the model with a predicted dataframe.
+    """
     predictionAndLabels = df.select("prediction", "label")
     evaluator = MulticlassClassificationEvaluator(metricName="accuracy")
     
@@ -101,6 +122,9 @@ def validate(df):
 ## THIS FUNCTION SHOULD BE SPLIT INTO ITS OWN FILE
 ## WHEN THE MODEL PARAMETERS CAN BE STORED ON DISK
 def writeToPostgreSQL(sql):
+    """
+    Write results to postgres.
+    """
     ## let's just write grab the crystal info here
     postgres_df = sql.select("image_id", "label_text").selectExpr("image_id as id", "label_text as crystal")
     postgres_df = postgres_df.withColumn('crystal_bool', when(postgres_df.crystal == "Crystals", True).otherwise(False)).drop(postgres_df.crystal).select(col("crystal_bool").alias("crystal"),col("id"))
@@ -115,6 +139,9 @@ def writeToPostgreSQL(sql):
                                       "password": os.environ["POSTGRES_PASSWORD"]}) 
 
 if __name__ == '__main__':
+    """
+    Setup the spark instance and AWS, postgres keys.
+    """
     sc = SparkContext(conf=SparkConf().setAppName("Crystal-Image-Classifier"))
     os.environ["AWS_ACCESS_KEY_ID"]=sys.argv[1]
     os.environ["AWS_SECRET_ACCESS_KEY"]=sys.argv[2]

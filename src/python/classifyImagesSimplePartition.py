@@ -1,5 +1,9 @@
 ## classify partitions of images to reduce writes
 def classifyImagesSimplePartition(partition):
+    """
+    Simple image classifier using url parsing.
+    Returns (urls, boolean).
+    """
     ## get the urls and imgs byte data
     urls, imgs = zip(*partition)
     ## determine crystal boolean by url

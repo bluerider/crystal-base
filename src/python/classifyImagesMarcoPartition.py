@@ -5,6 +5,10 @@ from zipfile import ZipFile
         
 ## classify partitions of images to reduce writes
 def classifyImagesMarcoPartition(partition):
+    """
+    Classify images using marco predictor.
+    Returns a list of (url, boolean).
+    """
     model = ZipFile('savedmodel.zip', 'r')\
         .extractall("")
     predictor = tf.contrib.predictor.from_saved_model('savedmodel')

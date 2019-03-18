@@ -3,12 +3,17 @@ import tensorflow as tf
 from zipfile import ZipFile
     
 ## bring the model out of the function to speed up loading
+## for dash instances
 model = ZipFile('savedmodel.zip', 'r')\
             .extractall("")
 predictor = tf.contrib.predictor.from_saved_model('savedmodel')
 
 ## define the one off function, uses a preloaded predictor
 def classifyImagesMarcoPartitionOneOff(partition):
+    """
+    Classify images using a preloaded model.
+    Returns (url, boolean).
+    """
     ## return the values with the global predictor
     values = classifyImagesMarcoPartition(partition, predictor)
     return(values)
@@ -16,6 +21,10 @@ def classifyImagesMarcoPartitionOneOff(partition):
 ## classify partitions of images to reduce writes
 ## pass in the predictor to reuse a predictor
 def classifyImagesMarcoPartition(partition, predictor):
+    """
+    Classify images using a preloaded model.
+    Returns (url, boolean).
+    """
     ## use zip since we are passed a list of
     ## tuples : <url, bytestring>
     urls, imgs = zip(*partition)

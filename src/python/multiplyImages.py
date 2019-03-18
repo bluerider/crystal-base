@@ -11,6 +11,11 @@ import boto3, s3fs
 
 ## let's pass in the sc (if running within pyspark)
 def main(sc):
+    """
+    Main insertion function.
+    Multiply images from S3 using rotation and mirror operations.
+    Upload the images to S3.
+    """
     ## we need to pass in the AWS keys
     sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", os.environ["AWS_ACCESS_KEY_ID"])
     sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", os.environ["AWS_SECRET_ACCESS_KEY"])
@@ -28,14 +33,18 @@ def main(sc):
 ## we have to switch to an RDD instead
 ## return an RDD
 def getImages(sc, addr):
-    ## get an rdd for the oil drop images
-    ## let's set more partitions
+    """
+    Return RDDs for crystal images from S3.
+    """
     crystal_imgs= ImageSchema.readImages(addr+"/marcos-data/*/*/*.jpeg", numPartitions = 2000)
-    #crystal_imgs = sc.textFile(addr+"/marcos-data/*/*/*.jpeg)
     return(crystal_imgs)
 
 ## generate variations of an image
 def genImagesToS3(row, aws_info):
+    """
+    Generate variations of an image from a dataframe row.
+    Upload images to S3.
+    """
     urls, imgs = transformImages(row)
     aws_access_key, aws_secret_key = aws_info.value
     s3 = s3fs.S3FileSystem(key = aws_access_key,
@@ -48,6 +57,10 @@ def genImagesToS3(row, aws_info):
 ## we will need to do several transform operations
 ## mirror -> rotate (90 degrees)
 def transformImages(row):
+    """
+    Transform images from a dataframe by rotating and mirroring.
+    Returns (url, jpeg).
+    """
     ## name is stored in url
     url_name = row.image.origin.split('.')[:-1][0]
     ## get the byte array
@@ -65,6 +78,9 @@ def transformImages(row):
 
 ## add images to S3
 def addToS3(urls, imgs, s3):
+    """
+    Upload images to S3 using url scheme.
+    """
     ## strip urls to become buckets
     buckets = [url.split("s3a://")[1] for url in urls]
     ## loop for buckets and imgs
@@ -85,6 +101,9 @@ def addToS3(urls, imgs, s3):
 
 
 if __name__ == '__main__':
+    """
+    Setup spark and AWS keys.
+    """
     ## pass the AWS access keys
     os.environ["AWS_ACCESS_KEY_ID"]=sys.argv[1]
     os.environ["AWS_SECRET_ACCESS_KEY"]=sys.argv[2]
