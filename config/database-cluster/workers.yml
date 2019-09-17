@@ -1,10 +1,10 @@
 purchase_type: on_demand
 subnet_id: subnet-01bc006215b4bfa36
-num_instances: 1
+num_instances: 3
 key_name: insight-aws2
-security_group_ids: sg-04950952b61aa079b
+security_group_ids: sg-08d81fc64ffc3f309
 instance_type: m4.large
-tag_name: crystal-project
+tag_name: crystal-project-database-cluster
 vol_size: 100
-role: master
+role: worker
 use_eips: true
